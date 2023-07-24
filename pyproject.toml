@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "hot_dust"}]
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.12"
+python = ">=3.10,<3.11"
 black = "^23.7.0"
 dask = "^2023.7.0"
 dvc = {version = "^2.58", extras = ["s3"]}
