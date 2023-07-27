@@ -12,7 +12,7 @@ def feature_histogram(variable):
     plt = variable.hvplot.hist()
     return plt  
 
-#def heat_map(variable): 
+def heat_map(variable): 
     plt.imshow(variable) 
     plt.show()  
 
