@@ -59,7 +59,9 @@ def split_training_data():
     # Return the data splits as tf.data.Dataset constructed from tf.data.Dataset.from_tensor_slices 
     train_dataset = tf.data.Dataset.from_tensor_slices(X_train, y_train) 
     validate_dataset = tf.data.Dataset.from_tensor_slices(X_validate, y_validate) 
-    test_dataset = tf.data.Dataset.from_tensor_slices(X_test, y_test) 
+    test_dataset = tf.data.Dataset.from_tensor_slices(X_test, y_test)  
+
+    return train_dataset
 
     
 
