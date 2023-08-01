@@ -9,15 +9,13 @@ def prepare_training_data():
     ds = xr.open_dataset('data/rt_nn_irdust_training_data.nc')
     return ds
 
-
 def feature_histogram(variable):
     plt = variable.hvplot.hist()
     return plt  
 
 def heat_map(variable): 
-    plt.imshow(variable) 
-    plt.colorbar()
-    plt.show()  
+   plt = variable.hvplot.heatmap() 
+   return plt
 
 def split_training_data():
     ds = xr.open_dataset('data/rt_nn_irdust_training_data.nc')   
@@ -30,7 +28,7 @@ def split_training_data():
     ds_random = rng.permutation(ds_np) # .permutation instead of .shuffle 
 
     # Reshape to remove the extra dimension
-    ds_random = ds_random.reshape(-1, ds_random.shape[-1]) 
+    ds_random = ds_random.reshape(-1, ds_random.shape[-1]) # The first dimesion made the shape odd
 
     # Define the percentages of the data to take
     train_ratio = 0.6 
