@@ -1,7 +1,0 @@
-#~\miniconda3\Scripts\conda.exe 
-
-name: hot_dust
-channels:
-  - conda-forge
-dependencies:
-  - tensorflow 
