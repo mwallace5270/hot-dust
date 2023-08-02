@@ -17,7 +17,7 @@ def heat_map(variable):
    plt = variable.hvplot.heatmap() 
    return plt
 
-def split_training_data():
+def split_training_data(dataset):
     ds = xr.open_dataset('data/rt_nn_irdust_training_data.nc')   
         
     # Convert xarray to numpy array for shuffling   
@@ -56,5 +56,4 @@ def split_training_data():
     validate_dataset = tf.data.Dataset.from_tensor_slices((X_validate, y_validate))
     test_dataset = tf.data.Dataset.from_tensor_slices((X_test, y_test))
     
-    return X_test, y_test
-    #return train_dataset, validate_dataset, test_dataset
+    return train_dataset, validate_dataset, test_dataset
