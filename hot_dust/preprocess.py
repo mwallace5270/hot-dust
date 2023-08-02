@@ -10,7 +10,7 @@ def prepare_training_data():
     return ds
 
 def feature_histogram(variable):
-    plt = variable.hvplot.hist()
+    plt = variable.hvplot.hist(dimension='nbands_viirs')
     return plt  
 
 def heat_map(variable): 
@@ -58,13 +58,3 @@ def split_training_data():
     
     return X_test, y_test
     #return train_dataset, validate_dataset, test_dataset
-
-
-    
-
-
-
-
-
-
-
