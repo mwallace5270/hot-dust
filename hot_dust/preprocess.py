@@ -41,13 +41,15 @@ def prepare_training_data():
     return ds[["x", "y"]].rename({"npoints": "sample"}).transpose("sample", ...)
 
 
-def feature_histogram(variable):
-    plt = variable.hvplot.hist()
+def feature_histogram(ds, feature_name): 
+    selected_feature = ds["x"].sel(features=feature_name)
+    plt = selected_feature.hvplot.hist()
     return plt
 
 
-def heat_map(variable):
-    plt = variable.hvplot.heatmap()
+def heat_map(ds, feature_name):
+    selected_feature = ds["x"].sel(features=feature_name)
+    plt = selected_feature.hvplot.heatmap()
     return plt
 
 

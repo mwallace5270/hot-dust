@@ -1,5 +1,4 @@
 import json
-
 import tensorflow as tf
 import xarray as xr
 import hvplot.xarray
@@ -18,11 +17,10 @@ def compile(normalization, **kwargs):
     inputs = tf.keras.Input(shape=normalization.weights[0].shape)
     layer = normalization(inputs)
     # hidden layers
-    # TODO 
-    hidden1 = tf.keras.layers.Dense(128, 'relu')(layer) 
-    hidden2 = tf.keras.layers.Dense(64, 'relu')(hidden1) 
+    hidden1 = tf.keras.layers.Dense(16, 'relu')(layer) 
+    hidden2 = tf.keras.layers.Dense(8, 'relu')(hidden1) 
     # prediction layer
-    hidden = tf.keras.layers.Dense(64, "relu")(hidden1)
+    hidden = tf.keras.layers.Dense(8, "relu")(hidden1)
     outputs =  hidden = tf.keras.layers.Dense(1, "linear")(hidden)
     # create network
     network = tf.keras.Model(inputs=inputs, outputs=outputs)
