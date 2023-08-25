@@ -17,11 +17,11 @@ def compile(normalization, **kwargs):
     inputs = tf.keras.Input(shape=normalization.weights[0].shape)
     layer = normalization(inputs)
     # hidden layers
-    hidden1 = tf.keras.layers.Dense(16, 'relu')(layer) 
-    hidden2 = tf.keras.layers.Dense(8, 'relu')(hidden1) 
+    hidden1 = tf.keras.layers.Dense(16, "relu")(layer)
+    hidden2 = tf.keras.layers.Dense(16, "relu")(hidden1)
+    hidden3 = tf.keras.layers.Dense(8, "relu")(hidden2)
     # prediction layer
-    hidden = tf.keras.layers.Dense(8, "relu")(hidden1)
-    outputs =  hidden = tf.keras.layers.Dense(1, "linear")(hidden)
+    outputs = tf.keras.layers.Dense(1, "linear")(hidden3)
     # create network
     network = tf.keras.Model(inputs=inputs, outputs=outputs)
     # add optimizer, loss, and any keyword arguments from call
