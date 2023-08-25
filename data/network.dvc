@@ -1,0 +1,5 @@
+outs:
+- md5: ea4d973221d421773c1189974fe80446.dir
+  size: 123549
+  nfiles: 5
+  path: network
