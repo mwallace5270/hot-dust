@@ -34,7 +34,7 @@ def prepare_training_data():
     ds["x"].attrs = {}
 
     # Assign response (as the log of dust optical thickness) to "y"
-    ds["y"] = np.log(ds["dust_optical_thickness"]) # TODO change to log10 (values chang e+1 - (-4))
+    ds["y"] = np.log10(ds["dust_optical_thickness"]) # log10
     ds["y"].attrs = {}
 
     # Return just "x" and "y" with "sample" as the first dimension
