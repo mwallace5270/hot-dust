@@ -21,8 +21,8 @@ def compile(normalization, **kwargs):
     #hidden2 = tf.keras.layers.Dense(8, 'relu')(hidden1)  
     #hidden3 = tf.keras.layers.Dense(8, 'relu')(hidden2) 
     # prediction layer
-    hidden = tf.keras.layers.Dense(8, 'linear')(hidden1)
-    outputs =  hidden = tf.keras.layers.Dense(1, "linear")(hidden)
+    hidden = tf.keras.layers.Dense(8, 'relu')(hidden1)
+    outputs =  hidden = tf.keras.layers.Dense(1, "relu")(hidden)
     # create network
     network = tf.keras.Model(inputs=inputs, outputs=outputs)
     # add optimizer, loss, and any keyword arguments from call
