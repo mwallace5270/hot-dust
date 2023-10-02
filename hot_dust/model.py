@@ -18,7 +18,7 @@ def compile(normalization, **kwargs):
     layer = normalization(inputs)
     # hidden layers
     hidden1 = tf.keras.layers.Dense(8, 'relu')(layer) 
-    hidden2 = tf.keras.layers.Dense(8, 'relu')(hidden1)  
+    #hidden2 = tf.keras.layers.Dense(8, 'relu')(hidden1)  
     #hidden3 = tf.keras.layers.Dense(8, 'relu')(hidden2) 
     # prediction layer
     hidden = tf.keras.layers.Dense(8, 'relu')(hidden1)
