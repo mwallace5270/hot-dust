@@ -18,8 +18,8 @@ def prepare_training_data():
     # Combine predictors into "x"
     features = [
         "solar_zenith_angle",
-        "viewing_zenith_angle",
-        "relative_azimuth_angle",
+        #"viewing_zenith_angle",
+        #"relative_azimuth_angle",
         "spress",
         "h2o",
         "o3",
