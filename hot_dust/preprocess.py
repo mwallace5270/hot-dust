@@ -1,8 +1,6 @@
 import xarray as xr
 import hvplot.xarray
 import numpy as np
-import matplotlib.pyplot as plt
-import tensorflow as tf
 
 
 def prepare_training_data():
@@ -34,28 +32,35 @@ def prepare_training_data():
     ds["x"].attrs = {}
 
     # Assign response (as the log of dust optical thickness) to "y"
-    ds["y"] = np.log10(ds["dust_optical_thickness"]) # log10
+    ds["y"] = np.log10(ds["dust_optical_thickness"])  # log10
     ds["y"].attrs = {}
 
     # Return just "x" and "y" with "sample" as the first dimension
     return ds[["x", "y"]].rename({"npoints": "sample"}).transpose("sample", ...)
 
 
-def feature_histogram(ds, feature_name): 
-    selected_feature = ds["x"].sel(features=feature_name)
+def feature_histogram(ds, feature_name):
+    selected_feature = ds["x"].sel({"features": feature_name})
     plt = selected_feature.hvplot.hist()
     return plt
 
 
-def heat_map(ds, feature_name):
-    selected_feature = ds["x"].sel(features=feature_name)
-    plt = selected_feature.hvplot.heatmap()
+def feature_hexbin(ds, x_feature_name, y_feature_name):
+    selected_feature = ds["x"].sel({"features": [x_feature_name, y_feature_name]})
+    selected_feature = selected_feature.to_dataset("features")
+    plt = selected_feature.hvplot.hexbin(x=x_feature_name, y=y_feature_name, aspect=1)
+    return plt
+
+
+def response_hexbin(ds, feature_name, response="y"):
+    selected_feature = ds.sel({"features": feature_name})
+    plt = selected_feature.hvplot.hexbin(x="x", y=response, aspect=1)
     return plt
 
 
 def split_training_data(ds: xr.Dataset):
     # Assign a split variable with a random but reproducible category
-    rng = np.random.default_rng(seed=1234)
+    rng = np.random.default_rng(seed=3857382908474)
     ds["split"] = (
         # dimensions
         "sample",
@@ -72,14 +77,3 @@ def split_training_data(ds: xr.Dataset):
 
     # Return the three datasets
     return ds["train"], ds["validate"], ds["test"]
-
-
-def to_tensorflow(ds):
-    dataset = []
-    for item in ds:
-        dataset.append(
-            tf.data.Dataset.from_tensor_slices((item["x"].values, item["y"].values))
-        )
-    return tuple(dataset)
-      
-   

@@ -4,16 +4,15 @@ version = "0.1.0"
 description = ""
 authors = []
 readme = "README.md"
-packages = [{include = "hot_dust"}]
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.11"
+python = "~3.10"
 black = "^23.7.0"
 dask = "^2023.7.0"
 dvc = {version = "^2.58", extras = ["s3"]}
-hvplot = "^0.8.4"
+hvplot = "^0.9.0"
 ipykernel = "^6.24.0"
 netcdf4 = "^1.6.4"
-tensorflow = "^2.13.0"
+tensorflow = {version = "^2.14.0", extras = []}
 xarray = "^2023.7.0"
 matplotlib = "^3.7.2"

@@ -1,13 +1,13 @@
 import json
+
 import tensorflow as tf
 import xarray as xr
-import hvplot.xarray
 
 
 def pretraining(dataset):
-    # create a non-trainable layer normalize the
+    # create a non-trainable layer to normalize the features
     layer = tf.keras.layers.Normalization()
-    layer.adapt(dataset.batch(2**12).map(lambda x, y: x).take(1))
+    layer.adapt(dataset.map(lambda x, y: x).batch(2**12))
     return layer
 
 
@@ -17,12 +17,9 @@ def compile(normalization, **kwargs):
     inputs = tf.keras.Input(shape=normalization.weights[0].shape)
     layer = normalization(inputs)
     # hidden layers
-    hidden1 = tf.keras.layers.Dense(8, 'relu')(layer) 
-    #hidden2 = tf.keras.layers.Dense(8, 'relu')(hidden1)  
-    #hidden3 = tf.keras.layers.Dense(8, 'relu')(hidden2) 
+    layer = tf.keras.layers.Dense(32, "relu")(layer)
     # prediction layer
-    hidden = tf.keras.layers.Dense(8, 'linear')(hidden1)
-    outputs =  hidden = tf.keras.layers.Dense(1, "linear")(hidden)
+    outputs = tf.keras.layers.Dense(1, "linear")(layer)
     # create network
     network = tf.keras.Model(inputs=inputs, outputs=outputs)
     # add optimizer, loss, and any keyword arguments from call
@@ -64,7 +61,7 @@ def plot_loss(trace):
             "validation_loss": ("epoch", trace["val_loss"]),
         },
     )
-    return ds.hvplot.scatter()
+    return ds.hvplot.scatter(logy=True)
 
 
 def dummy_data():
@@ -77,3 +74,12 @@ def dummy_data():
         tf.data.Dataset.from_tensor_slices((x[: (n // 5), :], y[: (n // 5)])),
         tf.data.Dataset.from_tensor_slices((x[: (n // 5), :], y[: (n // 5)])),
     )
+
+
+def to_tensorflow(ds):
+    dataset = []
+    for item in ds:
+        dataset.append(
+            tf.data.Dataset.from_tensor_slices((item["x"].values, item["y"].values))
+        )
+    return tuple(dataset)
