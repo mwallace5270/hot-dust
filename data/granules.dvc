@@ -1,0 +1,5 @@
+outs:
+- md5: 6a65ff893e50f355d51257850c9220d7.dir
+  size: 984892158
+  nfiles: 20
+  path: granules
