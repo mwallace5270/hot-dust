@@ -17,14 +17,14 @@ def prepare_training_data():
 
     # Combine predictors into "x"
     features = [
-        "solar_zenith_angle",
+        #"solar_zenith_angle",
         "viewing_zenith_angle",
-        "relative_azimuth_angle",
-        "spress",
-        "h2o",
-        "o3",
-        "ws",
-        "ts",
+        #"relative_azimuth_angle",
+        "spress", # surface pressure
+        "h2o", # water vapor
+        "o3", # ozone
+        "ws", # wind speed  
+        "ts", # temperature 
         *viirs_bts_labels,
     ]
     ds["x"] = xr.concat(
