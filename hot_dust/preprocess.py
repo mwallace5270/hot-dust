@@ -1,5 +1,4 @@
 from datetime import datetime
-from pathlib import Path
 
 import hvplot.xarray
 import numpy as np
@@ -82,14 +81,14 @@ def split_training_data(ds: xr.Dataset):
     return ds["train"], ds["validate"], ds["test"]
 
 
-def get_merra_variables(path: Path) -> xr.Dataset:
+def get_merra_variables(path: "pathlib.Path", fs: "s3fs.core.S3FileSystem" = None) -> xr.Dataset:
     # README
     # for opendap authentication, ensure correctness of ~/.netrc and ~/.dodsrc files
     # load attributes for temporal and spatial extents
     viirs = xr.open_dataset(path)
     tspan = [
-        datetime.fromisoformat(viirs.attrs["time_coverage_start"]),
-        datetime.fromisoformat(viirs.attrs["time_coverage_end"]),
+        datetime.fromisoformat(viirs.attrs["time_coverage_start"].strip("Z")),
+        datetime.fromisoformat(viirs.attrs["time_coverage_end"].strip("Z")),
     ]
     bbox = [
         viirs.attrs["geospatial_lon_min"],
@@ -99,12 +98,15 @@ def get_merra_variables(path: Path) -> xr.Dataset:
     ]
     # use day from tspan (assume no boundary crossing) to select MERRA-2 file
     ymd = tspan[0].strftime("%Y%m%d")
-    url = (
-        "dap4://goldsmr4.gesdisc.eosdis.nasa.gov/opendap/MERRA2/M2I1NXASM.5.12.4/"
-        f"{ymd[:4]}/{ymd[4:6]}/MERRA2_400.inst1_2d_asm_Nx.{ymd}.nc4"
-    )
-    merra = xr.open_dataset(url)
+    granule = f"{ymd[:4]}/{ymd[4:6]}/MERRA2_400.inst1_2d_asm_Nx.{ymd}.nc4" 
+    if fs:
+        # earthdata cloud
+        url = fs.open(f"s3://gesdisc-cumulus-prod-protected/MERRA2/M2I1NXASM.5.12.4/{granule}")
+    else:
+        # opendap
+        url = f"dap4://goldsmr4.gesdisc.eosdis.nasa.gov/opendap/MERRA2/M2I1NXASM.5.12.4/{granule}"        
     # select variables
+    merra = xr.open_dataset(url)
     variable = [
         "PS",  # surface_pressure
         "TS",  # surface_skin_temperature
