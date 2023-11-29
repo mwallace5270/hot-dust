@@ -1,11 +1,9 @@
 from datetime import datetime
+from pathlib import Path
 
 import hvplot.xarray
 import numpy as np
 import xarray as xr
-from scipy.interpolate import interpn
-
-from . import DATADIR
 
 
 def prepare_training_data():
@@ -84,11 +82,11 @@ def split_training_data(ds: xr.Dataset):
     return ds["train"], ds["validate"], ds["test"]
 
 
-def get_merra_variables(granule: str) -> xr.Dataset:
+def get_merra_variables(path: Path) -> xr.Dataset:
     # README
     # for opendap authentication, ensure correctness of ~/.netrc and ~/.dodsrc files
     # load attributes for temporal and spatial extents
-    viirs = xr.open_dataset(DATADIR / "granules" / granule)
+    viirs = xr.open_dataset(path)
     tspan = [
         datetime.fromisoformat(viirs.attrs["time_coverage_start"]),
         datetime.fromisoformat(viirs.attrs["time_coverage_end"]),
@@ -101,9 +99,11 @@ def get_merra_variables(granule: str) -> xr.Dataset:
     ]
     # use day from tspan (assume no boundary crossing) to select MERRA-2 file
     ymd = tspan[0].strftime("%Y%m%d")
-    url = "dap4://goldsmr4.gesdisc.eosdis.nasa.gov/opendap/MERRA2/M2I1NXASM.5.12.4/{}"
-    path = f"{ymd[:4]}/{ymd[4:6]}/MERRA2_400.inst1_2d_asm_Nx.{ymd}.nc4"
-    merra = xr.open_dataset(url.format(path))
+    url = (
+        "dap4://goldsmr4.gesdisc.eosdis.nasa.gov/opendap/MERRA2/M2I1NXASM.5.12.4/"
+        f"{ymd[:4]}/{ymd[4:6]}/MERRA2_400.inst1_2d_asm_Nx.{ymd}.nc4"
+    )
+    merra = xr.open_dataset(url)
     # select variables
     variable = [
         "PS",  # surface_pressure
@@ -113,8 +113,8 @@ def get_merra_variables(granule: str) -> xr.Dataset:
     ]
     merra = merra[variable]
     # identify coordinates for temporal and spatial interpolation
-    tmean = np.datetime64(tspan[0] + (tspan[1] - tspan[0]) / 2)
-    points = xr.open_dataset(DATADIR / "granules" / granule, group="geolocation_data")
+    tmean = np.array(tspan[0] + (tspan[1] - tspan[0]) / 2, dtype=merra["time"].dtype)
+    points = xr.open_dataset(path, group="geolocation_data")
     interp = merra.interp(
         coords={
             "time": tmean,
