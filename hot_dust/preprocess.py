@@ -1,6 +1,8 @@
-import xarray as xr
+from datetime import datetime
+
 import hvplot.xarray
 import numpy as np
+import xarray as xr
 
 
 def prepare_training_data():
@@ -15,14 +17,14 @@ def prepare_training_data():
 
     # Combine predictors into "x"
     features = [
-        #"solar_zenith_angle",
+        # "solar_zenith_angle",
         "viewing_zenith_angle",
-        #"relative_azimuth_angle",
-        "spress", # surface pressure
-        "h2o", # water vapor
-        "o3", # ozone
-        "ws", # wind speed  
-        "ts", # temperature 
+        # "relative_azimuth_angle",
+        "spress",  # surface pressure
+        "h2o",  # water vapor
+        "o3",  # ozone
+        "ws",  # wind speed
+        "ts",  # temperature
         *viirs_bts_labels,
     ]
     ds["x"] = xr.concat(
@@ -32,7 +34,7 @@ def prepare_training_data():
     ds["x"].attrs = {}
 
     # Assign response (as the log of dust optical thickness) to "y"
-    ds["y"] = np.log10(ds["dust_optical_thickness"])  # log10
+    ds["y"] = np.log10(ds["dust_optical_thickness"])
     ds["y"].attrs = {}
 
     # Return just "x" and "y" with "sample" as the first dimension
@@ -77,3 +79,50 @@ def split_training_data(ds: xr.Dataset):
 
     # Return the three datasets
     return ds["train"], ds["validate"], ds["test"]
+
+
+def get_merra_variables(path: "pathlib.Path", fs: "s3fs.core.S3FileSystem" = None) -> xr.Dataset:
+    # README
+    # for opendap authentication, ensure correctness of ~/.netrc and ~/.dodsrc files
+    # load attributes for temporal and spatial extents
+    viirs = xr.open_dataset(path)
+    tspan = [
+        datetime.fromisoformat(viirs.attrs["time_coverage_start"].strip("Z")),
+        datetime.fromisoformat(viirs.attrs["time_coverage_end"].strip("Z")),
+    ]
+    bbox = [
+        viirs.attrs["geospatial_lon_min"],
+        viirs.attrs["geospatial_lat_min"],
+        viirs.attrs["geospatial_lon_max"],
+        viirs.attrs["geospatial_lat_max"],
+    ]
+    # use day from tspan (assume no boundary crossing) to select MERRA-2 file
+    ymd = tspan[0].strftime("%Y%m%d")
+    granule = f"{ymd[:4]}/{ymd[4:6]}/MERRA2_400.inst1_2d_asm_Nx.{ymd}.nc4" 
+    if fs:
+        # earthdata cloud
+        url = fs.open(f"s3://gesdisc-cumulus-prod-protected/MERRA2/M2I1NXASM.5.12.4/{granule}")
+    else:
+        # opendap
+        url = f"dap4://goldsmr4.gesdisc.eosdis.nasa.gov/opendap/MERRA2/M2I1NXASM.5.12.4/{granule}"        
+    # select variables
+    merra = xr.open_dataset(url)
+    variable = [
+        "PS",  # surface_pressure
+        "TS",  # surface_skin_temperature
+        "TO3",  # total_column_ozone
+        "TQV",  # total_precipitable_water_vapor
+    ]
+    merra = merra[variable]
+    # identify coordinates for temporal and spatial interpolation
+    tmean = np.array(tspan[0] + (tspan[1] - tspan[0]) / 2, dtype=merra["time"].dtype)
+    points = xr.open_dataset(path, group="geolocation_data")
+    interp = merra.interp(
+        coords={
+            "time": tmean,
+            "lon": points["longitude"],
+            "lat": points["latitude"],
+        },
+        method="linear",
+    )
+    return interp
