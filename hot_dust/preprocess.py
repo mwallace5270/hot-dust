@@ -107,7 +107,7 @@ def get_merra_variables(path: "pathlib.Path", fs: "s3fs.core.S3FileSystem" = Non
         url = f"dap4://goldsmr4.gesdisc.eosdis.nasa.gov/opendap/MERRA2/M2I1NXASM.5.12.4/{granule}"        
     # select variables
     merra = xr.open_dataset(url, chunks={})
-    ws = ["U2M", "V2M"] # 2-meter east|northward wind (10 and 50 meter also available)
+    ws = ["U10M", "V10M"] # 10-meter east|northward wind (10 and 50 meter also available)
     variable = [
         "PS",  # surface_pressure
         "TS",  # surface_skin_temperature
@@ -118,6 +118,7 @@ def get_merra_variables(path: "pathlib.Path", fs: "s3fs.core.S3FileSystem" = Non
     merra = merra[variable]
     # create wind speed
     merra["WS"] = (merra[ws].to_array(dim="vec") ** 2).sum(dim="vec") ** 0.5
+    merra["WS"].attrs["long_name"] = "magnitude of 10-meter wind vector"
     merra = merra.drop_vars(ws)
     # identify coordinates for temporal and spatial interpolation
     tmean = np.array(tspan[0] + (tspan[1] - tspan[0]) / 2, dtype=merra["time"].dtype)
