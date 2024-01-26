@@ -41,9 +41,13 @@ def prepare_training_data():
     return ds[["x", "y"]].rename({"npoints": "sample"}).transpose("sample", ...)
 
 
-def feature_histogram(ds, feature_name):
-    selected_feature = ds["x"].sel({"features": feature_name})
-    plt = selected_feature.hvplot.hist()
+def feature_histogram(ds, feature_name, titlename):
+    ds_sorted = ds.sortby("features")
+    selected_feature = ds_sorted["x"].sel({"features": feature_name})
+    plt = selected_feature.hvplot.hist() 
+    plt = plt.opts(title= titlename, fontsize={
+        'title' : 25
+    })
     return plt
 
 
