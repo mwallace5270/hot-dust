@@ -1,0 +1,6 @@
+outs:
+- md5: fc8db3d48acf16632c2088633919b5d1.dir
+  size: 207298560
+  nfiles: 5
+  hash: md5
+  path: granules-prediction-cm

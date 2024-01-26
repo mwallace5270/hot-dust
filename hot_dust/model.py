@@ -17,7 +17,8 @@ def compile(normalization, **kwargs):
     inputs = tf.keras.Input(shape=normalization.weights[0].shape)
     layer = normalization(inputs)
     # hidden layers
-    layer = tf.keras.layers.Dense(32, "relu")(layer)
+    layer = tf.keras.layers.Dense(16, "relu")(layer)
+    layer = tf.keras.layers.Dense(16, "relu")(layer)
     # prediction layer
     outputs = tf.keras.layers.Dense(1, "linear")(layer)
     # create network
@@ -57,11 +58,13 @@ def plot_loss(trace):
     ds = xr.Dataset(
         {
             "epoch": ("epoch", trace["epoch"]),
-            "train_loss": ("epoch", trace["loss"]),
-            "validation_loss": ("epoch", trace["val_loss"]),
+            "training": ("epoch", trace["loss"]),
+            "validation": ("epoch", trace["val_loss"]),
         },
     )
-    return ds.hvplot.scatter(logy=True)
+    plot = ds.hvplot.scatter(logy=True, ylabel="MSE", group_label="split")
+    plot.opts(legend_position="top_right", fontscale=4, frame_height=500, frame_width=700)
+    return plot
 
 
 def dummy_data():
