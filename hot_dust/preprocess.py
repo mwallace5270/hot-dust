@@ -204,4 +204,29 @@ def process_granule(path: "pathlib.Path") -> xr.Dataset:
     # concatenate the feature variables, in the order above, into a 3D array
     x = variables_merged[features].to_array("feature")
     
-    return x
+    return x 
+
+def sensitivity_analysis(ds, network, feature_name):
+    sensitivity_vector = [1, 2, 5, 10]  # This is in %  
+    x_values = ds.sel(features=feature_name).values
+    x_label = f'Feature {feature_name}'
+    sensitivity_values = [] 
+    std_dev = np.std(x_values)    
+
+    for percentage in sensitivity_vector:
+        perturbation = 0.01 * std_dev * percentage  # 1% of standard deviation
+        perturbed_values = x_values + perturbation # x + dx
+
+        # Predict with perturbed values
+        perturbed_outputs = network(perturbed_values, verbose=0).reshape((-1,))
+        original_outputs = network(x_values, verbose=0).reshape((-1,))
+        # Calculate sensitivity: (change in y) / (change in x)
+        sensitivity = np.mean((perturbed_outputs - original_outputs) / perturbation)
+        sensitivity_values.append(sensitivity) 
+
+    # Plot the sesitivity matrix and histogram 
+    plt.hist(sensitivity_values)
+    plt.xlabel('Percentage of Pertubation')
+    plt.ylabel("Sensitivity") 
+    plt.title(f"Sensitivity Analysis for {x_label}" )
+    plt.show()

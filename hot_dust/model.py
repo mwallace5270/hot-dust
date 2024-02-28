@@ -76,7 +76,7 @@ def dummy_data():
         tf.data.Dataset.from_tensor_slices((x, y)),
         tf.data.Dataset.from_tensor_slices((x[: (n // 5), :], y[: (n // 5)])),
         tf.data.Dataset.from_tensor_slices((x[: (n // 5), :], y[: (n // 5)])),
-    )
+    ) 
 
 
 def to_tensorflow(ds):
