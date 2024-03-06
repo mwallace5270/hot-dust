@@ -216,7 +216,8 @@ def sensitivity_analysis(ds, network, percentage):
     perturbed_values = x_values + perturbation # x + dx
 
     # Predict with perturbed values
-    perturbed_outputs = network(perturbed_values)
+    perturbed_outputs = network(perturbed_values) 
+    print(perturbed_outputs)
     original_outputs = network(x_values)
    
     # Calculate sensitivity: (change in y) / (change in x) 
