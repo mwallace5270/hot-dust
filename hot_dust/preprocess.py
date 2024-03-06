@@ -206,27 +206,31 @@ def process_granule(path: "pathlib.Path") -> xr.Dataset:
     
     return x 
 
-def sensitivity_analysis(ds, network, feature_name):
-    sensitivity_vector = [1, 2, 5, 10]  # This is in %  
-    x_values = ds.sel(features=feature_name).values
-    x_label = f'Feature {feature_name}'
+def sensitivity_analysis(ds, network, percentage):
+    x_values = ds['x'].sel()
     sensitivity_values = [] 
     std_dev = np.std(x_values)    
 
-    for percentage in sensitivity_vector:
-        perturbation = 0.01 * std_dev * percentage  # 1% of standard deviation
-        perturbed_values = x_values + perturbation # x + dx
+    perturbation = 0.01 * std_dev * percentage  # pertubation is 1% of standard deviation
+    # Peturb the x values
+    perturbed_values = x_values + perturbation # x + dx
 
-        # Predict with perturbed values
-        perturbed_outputs = network(perturbed_values, verbose=0).reshape((-1,))
-        original_outputs = network(x_values, verbose=0).reshape((-1,))
-        # Calculate sensitivity: (change in y) / (change in x)
-        sensitivity = np.mean((perturbed_outputs - original_outputs) / perturbation)
-        sensitivity_values.append(sensitivity) 
+    # Predict with perturbed values
+    perturbed_outputs = network(perturbed_values)
+    original_outputs = network(x_values)
+   
+    # Calculate sensitivity: (change in y) / (change in x) 
+    sensitivity = np.mean((perturbed_outputs - original_outputs) / (perturbation - x_values))
+    sensitivity_values.append(sensitivity.values) 
 
-    # Plot the sesitivity matrix and histogram 
+    # Plot the sensitivity matrix and histogram 
     plt.hist(sensitivity_values)
     plt.xlabel('Percentage of Pertubation')
     plt.ylabel("Sensitivity") 
-    plt.title(f"Sensitivity Analysis for {x_label}" )
-    plt.show()
+    plt.title(f"Sensitivity Analysis" )
+    plt.show() 
+
+
+
+    # indexing for selction: x_col_3 = x[:, 3] 
+    # indexing in assignment: x[:, 3]  = new_x_col_3 FOR PETURBED VALUE
