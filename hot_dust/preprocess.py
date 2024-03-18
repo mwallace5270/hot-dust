@@ -3,7 +3,7 @@ from datetime import datetime
 import hvplot.xarray
 import numpy as np
 import xarray as xr
-
+import matplotlib.pyplot as plt
 
 def prepare_training_data():
     # Read the training data file
@@ -207,31 +207,36 @@ def process_granule(path: "pathlib.Path") -> xr.Dataset:
     return x 
 
 def sensitivity_analysis(ds, network, percentage):
-    x_values = ds['x'].sel()
+    x_values = ds['x'].values
     sensitivity_values = [] 
     std_dev = np.std(x_values)    
 
     perturbation = 0.01 * std_dev * percentage  # pertubation is 1% of standard deviation
     # Peturb the x values
-    perturbed_values = x_values + perturbation # x + dx
+    perturbed_values = x_values + perturbation # x + dx 
+    original_outputs = network.predict(x_values)
 
-    # Predict with perturbed values
-    perturbed_outputs = network(perturbed_values) 
-    print(perturbed_outputs)
-    original_outputs = network(x_values)
-   
-    # Calculate sensitivity: (change in y) / (change in x) 
-    sensitivity = np.mean((perturbed_outputs - original_outputs) / (perturbation - x_values))
-    sensitivity_values.append(sensitivity.values) 
+    #loop for each variable 
+    for i in range( x_values.shape[1]):
+        x = x_values.copy() 
+        x[:,i] = perturbed_values[:,i]
+
+       # Predict with perturbed values
+        perturbed_outputs = network.predict(x) #TODO need to find a way to pass the values into the network 
+        
+    
+        # Calculate sensitivity: (change in y) / (change in x) 
+        sensitivity = np.mean((perturbed_outputs - original_outputs) / (perturbation - x_values))
+        sensitivity_values.append(sensitivity) 
 
     # Plot the sensitivity matrix and histogram 
-    plt.hist(sensitivity_values)
+    plt.plot(sensitivity_values)
     plt.xlabel('Percentage of Pertubation')
     plt.ylabel("Sensitivity") 
-    plt.title(f"Sensitivity Analysis" )
+    plt.title("Sensitivity Analysis" )
     plt.show() 
 
 
-
+# What was I trying to do with these?? 
     # indexing for selction: x_col_3 = x[:, 3] 
     # indexing in assignment: x[:, 3]  = new_x_col_3 FOR PETURBED VALUE
