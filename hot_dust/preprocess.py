@@ -155,7 +155,18 @@ def process_granule(path: "pathlib.Path") -> xr.Dataset:
     for item in ["M14", "M15", "M16"]:
         vnp02_variables[item + "_bt"] = open_vnp02[item + "_brightness_temperature_lut"][open_vnp02_int[item]]
         long_name = vnp02_variables[f"{item}_bt"].attrs["long_name"]
-        vnp02_variables[item + "_bt"].attrs["long_name"] = long_name.replace(" lookup table", "")
+        vnp02_variables[item + "_bt"].attrs["long_name"] = long_name.replace(" lookup table", "") 
+    
+    #Brightness Temperature Differences 
+    M14_band = vnp02_variables["M14"].sel(features = "bt_8500")
+    M15_band = vnp02_variables["M15"].sel(features = "bt_10800")
+    M16_band = vnp02_variables["M16"].sel(features = "bt_12000") 
+    # Subtract the bands to get the BTD bands
+    BTD14_15 = M14_band - M15_band
+    BTD14_16 = M14_band - M16_band
+    BTD15_16 = M15_band - M16_band 
+    #Combine them back together 
+    combined_btd = xr.concat([BTD14_15, BTD14_16, BTD15_16], dim="btd_band")
     
     # ## Load VNP03MOD geolocation coordinates
     # open (just open, no tricks here)
@@ -184,7 +195,7 @@ def process_granule(path: "pathlib.Path") -> xr.Dataset:
     # divide the MERRA2 pressure by 100 to get it in the right units
     merra_variables['PS'] = merra_variables['PS'] / 100
     # merge viirs and merra variables
-    variables_merged = xr.merge([vnp02_variables, vnp03_variables, merra_variables])
+    variables_merged = xr.merge([vnp02_variables, vnp03_variables, merra_variables, combined_btd])
     
     # ## Transform to Model Input
     # the features list must references the same variables as the features list in `prepare_training_data`
@@ -197,9 +208,9 @@ def process_granule(path: "pathlib.Path") -> xr.Dataset:
         "TO3",
         "WS",
         "TS",
-        "M14_bt",
-        "M15_bt",
-        "M16_bt",
+        "BTD14_15",
+        "BTD14_16",
+        "BTD15_16",
     ]    
     # concatenate the feature variables, in the order above, into a 3D array
     x = variables_merged[features].to_array("feature")
