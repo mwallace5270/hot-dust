@@ -20,9 +20,10 @@ def compile(normalization, **kwargs):
     layer = tf.keras.layers.Dense(16, "relu")(layer)
     layer = tf.keras.layers.Dense(16, "relu")(layer)
     # prediction layer
-    outputs = tf.keras.layers.Dense(1, "linear")(layer)
+    output1 = tf.keras.layers.Dense(1, "linear", name='output1')(layer) 
+    output2 = tf.keras.layers.Dense(1, "linear", name='output')(layer) 
     # create network
-    network = tf.keras.Model(inputs=inputs, outputs=outputs)
+    network = tf.keras.Model(inputs=inputs, outputs=[output1, output2])
     # add optimizer, loss, and any keyword arguments from call
     network.compile(
         optimizer=tf.optimizers.Adam(learning_rate=3e-4),

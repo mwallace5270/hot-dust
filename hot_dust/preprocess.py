@@ -20,11 +20,11 @@ def prepare_training_data():
         # "solar_zenith_angle",
         "viewing_zenith_angle",
         # "relative_azimuth_angle",
-        "spress",  # surface pressure
+        "spress",  # surface pressure  
         "h2o",  # water vapor
         "o3",  # ozone
         "ws",  # wind speed
-        "ts",  # temperature
+        #"ts",  # temperature # take surface temperature away from the list of inputs, and make it an output
         *viirs_bts_labels,
     ]
     ds["x"] = xr.concat(
@@ -33,8 +33,13 @@ def prepare_training_data():
     )
     ds["x"].attrs = {}
 
-    # Assign response (as the log of dust optical thickness) to "y"
-    ds["y"] = np.log10(ds["dust_optical_thickness"])
+    # Assign outputs (as the log of dust optical thickness) to "y" & surface pressure
+    output1 = np.log10(ds["dust_optical_thickness"]) 
+    output2 = ds['ts']
+    ds["y"] = xr.concat(
+        [output1, output2],
+        dim="output_dim"
+    )
     ds["y"].attrs = {}
 
     # Return just "x" and "y" with "sample" as the first dimension
@@ -111,7 +116,7 @@ def get_merra_variables(path: "pathlib.Path", fs: "s3fs.core.S3FileSystem" = Non
     merra = xr.open_dataset(url, chunks={})
     ws = ["U10M", "V10M"] # 10-meter east|northward wind (10 and 50 meter also available)
     variable = [
-        "PS",  # surface_pressure
+        "PS",  # surface_pressure 
         "TS",  # surface_skin_temperature
         "TO3",  # total_column_ozone
         "TQV",  # total_precipitable_water_vapor
@@ -192,7 +197,7 @@ def process_granule(path: "pathlib.Path") -> xr.Dataset:
         # "solar_zenith",
         "sensor_zenith",
         # "relative_azimuth",
-        "PS",
+        # "PS", # take surface temperature away from the list of inputs, and make it an output
         "TQV",
         "TO3",
         "WS",
