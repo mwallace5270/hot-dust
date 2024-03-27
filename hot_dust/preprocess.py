@@ -33,7 +33,7 @@ def prepare_training_data():
     )
     ds["x"].attrs = {}
 
-    # Assign outputs (as the log of dust optical thickness) to "y" & surface pressure
+    # Assign outputs (as the log of dust optical thickness) to "y" & surface temperature
     output1 = np.log10(ds["dust_optical_thickness"]) 
     output2 = ds['ts']
     ds["y"] = xr.concat(
@@ -197,11 +197,11 @@ def process_granule(path: "pathlib.Path") -> xr.Dataset:
         # "solar_zenith",
         "sensor_zenith",
         # "relative_azimuth",
-        # "PS", # take surface temperature away from the list of inputs, and make it an output
+         "PS", 
         "TQV",
         "TO3",
         "WS",
-        "TS",
+        #"TS", # take surface temperature away from the list of inputs, and make it an output
         "M14_bt",
         "M15_bt",
         "M16_bt",
@@ -214,24 +214,23 @@ def process_granule(path: "pathlib.Path") -> xr.Dataset:
 def sensitivity_analysis(ds, network, percentage):
     x_values = ds['x'].values
     sensitivity_values = [] 
-    std_dev = np.std(x_values)    
+    std_dev = np.std(x_values) # std of the input values   
 
     perturbation = 0.01 * std_dev * percentage  # pertubation is 1% of standard deviation
-    # Peturb the x values
+    # Peturb the input values
     perturbed_values = x_values + perturbation # x + dx 
     original_outputs = network.predict(x_values)
 
-    #loop for each variable 
-    for i in range( x_values.shape[1]):
-        x = x_values.copy() 
-        x[:,i] = perturbed_values[:,i]
-
-       # Predict with perturbed values
-        perturbed_outputs = network.predict(x) #TODO need to find a way to pass the values into the network 
-        
-    
+    # Loop through each variable 
+    for i in range(x_values.shape[1]):
+        x = x_values.copy()  
+        # Perturb the i-th variable by adding perturbation value
+        x[:,i] += perturbed_values[i]
+        # Predict with perturbed values
+        perturbed_outputs = network.predict(x)  
         # Calculate sensitivity: (change in y) / (change in x) 
-        sensitivity = np.mean((perturbed_outputs - original_outputs) / (perturbation - x_values))
+        sensitivity = np.mean((perturbed_outputs - original_outputs) / 
+                              (perturbation - x_values), axis=0) # Calculate for both outputs
         sensitivity_values.append(sensitivity) 
 
     # Plot the sensitivity matrix and histogram 
