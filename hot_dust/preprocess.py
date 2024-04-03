@@ -227,27 +227,20 @@ def sensitivity_analysis(ds, network, percentage):
     perturbed_values = x_values + perturbation # x + dx 
     original_outputs = network.predict(x_values)
 
-    #loop for each variable 
+    # Loop through each variable 
     for i in range( x_values.shape[1]):
         x = x_values.copy() 
-        x[:,i] = perturbed_values[:,i]
-
-       # Predict with perturbed values
-        perturbed_outputs = network.predict(x) #TODO need to find a way to pass the values into the network 
-        
-    
+        # Perturb the i-th variable by adding perturbation value
+        x[:,i] += perturbed_values[:,i]
+        # Predict with perturbed values
+        perturbed_outputs = network.predict(x)    
         # Calculate sensitivity: (change in y) / (change in x) 
         sensitivity = np.mean((perturbed_outputs - original_outputs) / (perturbation - x_values))
         sensitivity_values.append(sensitivity) 
 
     # Plot the sensitivity matrix and histogram 
     plt.plot(sensitivity_values)
-    plt.xlabel('Percentage of Pertubation')
+    plt.xlabel('Inputs (1-7)')
     plt.ylabel("Sensitivity") 
     plt.title("Sensitivity Analysis" )
     plt.show() 
-
-
-# What was I trying to do with these?? 
-    # indexing for selction: x_col_3 = x[:, 3] 
-    # indexing in assignment: x[:, 3]  = new_x_col_3 FOR PETURBED VALUE
