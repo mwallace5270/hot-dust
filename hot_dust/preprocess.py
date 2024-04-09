@@ -20,11 +20,11 @@ def prepare_training_data():
         # "solar_zenith_angle",
         "viewing_zenith_angle",
         # "relative_azimuth_angle",
-        "spress",  # surface pressure  
+        "spress",  # surface pressure
         "h2o",  # water vapor
         "o3",  # ozone
         "ws",  # wind speed
-        #"ts",  # temperature # take surface temperature away from the list of inputs, and make it an output
+        "ts",  # temperature
         *viirs_bts_labels,
     ]
     ds["x"] = xr.concat(
@@ -33,13 +33,8 @@ def prepare_training_data():
     )
     ds["x"].attrs = {}
 
-    # Assign outputs (as the log of dust optical thickness) to "y" & surface temperature
-    output1 = np.log10(ds["dust_optical_thickness"]) 
-    output2 = ds['ts']
-    ds["y"] = xr.concat(
-        [output1, output2],
-        dim="output_dim"
-    )
+    # Assign response (as the log of dust optical thickness) to "y"
+    ds["y"] = np.log10(ds["dust_optical_thickness"])
     ds["y"].attrs = {}
 
     # Return just "x" and "y" with "sample" as the first dimension
@@ -116,7 +111,7 @@ def get_merra_variables(path: "pathlib.Path", fs: "s3fs.core.S3FileSystem" = Non
     merra = xr.open_dataset(url, chunks={})
     ws = ["U10M", "V10M"] # 10-meter east|northward wind (10 and 50 meter also available)
     variable = [
-        "PS",  # surface_pressure 
+        "PS",  # surface_pressure
         "TS",  # surface_skin_temperature
         "TO3",  # total_column_ozone
         "TQV",  # total_precipitable_water_vapor
@@ -160,7 +155,18 @@ def process_granule(path: "pathlib.Path") -> xr.Dataset:
     for item in ["M14", "M15", "M16"]:
         vnp02_variables[item + "_bt"] = open_vnp02[item + "_brightness_temperature_lut"][open_vnp02_int[item]]
         long_name = vnp02_variables[f"{item}_bt"].attrs["long_name"]
-        vnp02_variables[item + "_bt"].attrs["long_name"] = long_name.replace(" lookup table", "")
+        vnp02_variables[item + "_bt"].attrs["long_name"] = long_name.replace(" lookup table", "") 
+    
+    #Brightness Temperature Differences 
+    M14_band = vnp02_variables["M14"].sel(features = "bt_8500")
+    M15_band = vnp02_variables["M15"].sel(features = "bt_10800")
+    M16_band = vnp02_variables["M16"].sel(features = "bt_12000") 
+    # Subtract the bands to get the BTD bands
+    BTD14_15 = M14_band - M15_band
+    BTD14_16 = M14_band - M16_band
+    BTD15_16 = M15_band - M16_band 
+    #Combine them back together 
+    combined_btd = xr.concat([BTD14_15, BTD14_16, BTD15_16], dim="btd_band")
     
     # ## Load VNP03MOD geolocation coordinates
     # open (just open, no tricks here)
@@ -189,7 +195,7 @@ def process_granule(path: "pathlib.Path") -> xr.Dataset:
     # divide the MERRA2 pressure by 100 to get it in the right units
     merra_variables['PS'] = merra_variables['PS'] / 100
     # merge viirs and merra variables
-    variables_merged = xr.merge([vnp02_variables, vnp03_variables, merra_variables])
+    variables_merged = xr.merge([vnp02_variables, vnp03_variables, merra_variables, combined_btd])
     
     # ## Transform to Model Input
     # the features list must references the same variables as the features list in `prepare_training_data`
@@ -197,50 +203,45 @@ def process_granule(path: "pathlib.Path") -> xr.Dataset:
         # "solar_zenith",
         "sensor_zenith",
         # "relative_azimuth",
-         "PS", 
+        "PS",
         "TQV",
         "TO3",
         "WS",
-        #"TS", # take surface temperature away from the list of inputs, and make it an output
-        "M14_bt",
-        "M15_bt",
-        "M16_bt",
+        "TS",
+        "BTD14_15",
+        "BTD14_16",
+        "BTD15_16",
     ]    
     # concatenate the feature variables, in the order above, into a 3D array
     x = variables_merged[features].to_array("feature")
-    
-    return x 
+
+    return x
 
 def sensitivity_analysis(ds, network, percentage):
     x_values = ds['x'].values
-    sensitivity_values = [] 
-    std_dev = np.std(x_values) # std of the input values   
+    std_dev = np.std(x_values)   
+    sensitivity_values = []  
 
     perturbation = 0.01 * std_dev * percentage  # pertubation is 1% of standard deviation
-    # Peturb the input values
+    # Peturb the x values
     perturbed_values = x_values + perturbation # x + dx 
     original_outputs = network.predict(x_values)
 
-    # Loop through each variable 
-    for i in range(x_values.shape[1]):
-        x = x_values.copy()  
+    # Loop through each variable in the inputs
+    for i in range( x_values.shape[1]):
+        x = x_values.copy() 
         # Perturb the i-th variable by adding perturbation value
-        x[:,i] += perturbed_values[i]
+        x[:,i] += perturbed_values[:,i]
         # Predict with perturbed values
-        perturbed_outputs = network.predict(x)  
-        # Calculate sensitivity: (change in y) / (change in x) 
-        sensitivity = np.mean((perturbed_outputs - original_outputs) / 
-                              (perturbation - x_values), axis=0) # Calculate for both outputs
+        perturbed_outputs = network.predict(x)    
+        # Calculate sensitivity: (change in y) / (change in x)  
+        change_y = np.abs(perturbed_outputs - original_outputs)
+        sensitivity = np.mean(change_y / (perturbation - x_values))
         sensitivity_values.append(sensitivity) 
 
     # Plot the sensitivity matrix and histogram 
     plt.plot(sensitivity_values)
-    plt.xlabel('Percentage of Pertubation')
+    plt.xlabel('Inputs (1-7)')
     plt.ylabel("Sensitivity") 
     plt.title("Sensitivity Analysis" )
     plt.show() 
-
-
-# What was I trying to do with these?? 
-    # indexing for selction: x_col_3 = x[:, 3] 
-    # indexing in assignment: x[:, 3]  = new_x_col_3 FOR PETURBED VALUE
