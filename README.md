@@ -7,3 +7,15 @@ Notebooks and scripts that analyze infrared data from the VIIRS satellite instru
 ## Estimating Dust Aerosol Optical Thickness with IR Bands
 
 
+## Aim 
+We trained a neural network model to quantify dust in the atmosphere utilizing simulated data. After analyzing the model's performance on simulated data applied the network on actual VIIRS data from [AERONET](https://aeronet.gsfc.nasa.gov/). 
+
+In order to do this we had to preform several step in order to prepare the data for the network. 
+  1. Step 1
+  2. Step 2
+
+## Results  
+On the simulated data the model prefored well. When applied to actual VIIRS data the network did not predict realistic dust optical thickness. See the notebook in the repsitory **evaluate**.  
+
+## Data avalibility 
+Don't know if I need this section yet...
