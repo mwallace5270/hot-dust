@@ -1,6 +1,6 @@
 outs:
-- md5: a255c7ddd09b8a443e170b7034fe892a.dir
-  size: 207298560
-  nfiles: 5
+- md5: 3b5755d9aa0f771f7fdafb98b8612d15.dir
+  size: 165715968
+  nfiles: 4
   hash: md5
   path: granules-prediction
