@@ -20,7 +20,7 @@ def compile(normalization, **kwargs):
     layer = tf.keras.layers.Dense(16, "relu")(layer)
     layer = tf.keras.layers.Dense(16, "relu")(layer)
     # prediction layer
-    output = tf.keras.layers.Dense(2, "linear")(layer) 
+    output = tf.keras.layers.Dense(2, "linear")(layer) # 2 outputs: dust optical thickness + surface temperature
     # create network
     network = tf.keras.Model(inputs=inputs, outputs=output)
     # add optimizer, loss, and any keyword arguments from call

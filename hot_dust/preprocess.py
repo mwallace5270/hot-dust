@@ -24,7 +24,7 @@ def prepare_training_data():
         "h2o",  # water vapor
         "o3",  # ozone
         "ws",  # wind speed
-        "ts",  # temperature
+        #"ts",  # temperature # take surface temperature away from the list of inputs, and make it an output
         *viirs_bts_labels,
     ]
     ds["x"] = xr.concat(
@@ -33,8 +33,13 @@ def prepare_training_data():
     )
     ds["x"].attrs = {}
 
-    # Assign response (as the log of dust optical thickness) to "y"
-    ds["y"] = np.log10(ds["dust_optical_thickness"])
+    # Assign outputs (as the log of dust optical thickness) to "y" & surface temperature
+    output1 = np.log10(ds["dust_optical_thickness"]) 
+    output2 = ds['ts']
+    ds["y"] = xr.concat(
+        [output1, output2],
+        dim="output_dim"
+    )
     ds["y"].attrs = {}
 
     # Return just "x" and "y" with "sample" as the first dimension
@@ -157,17 +162,6 @@ def process_granule(path: "pathlib.Path") -> xr.Dataset:
         long_name = vnp02_variables[f"{item}_bt"].attrs["long_name"]
         vnp02_variables[item + "_bt"].attrs["long_name"] = long_name.replace(" lookup table", "") 
     
-    #Brightness Temperature Differences 
-    M14_band = vnp02_variables["M14"].sel(features = "bt_8500")
-    M15_band = vnp02_variables["M15"].sel(features = "bt_10800")
-    M16_band = vnp02_variables["M16"].sel(features = "bt_12000") 
-    # Subtract the bands to get the BTD bands
-    BTD14_15 = M14_band - M15_band
-    BTD14_16 = M14_band - M16_band
-    BTD15_16 = M15_band - M16_band 
-    #Combine them back together 
-    combined_btd = xr.concat([BTD14_15, BTD14_16, BTD15_16], dim="btd_band")
-    
     # ## Load VNP03MOD geolocation coordinates
     # open (just open, no tricks here)
     open_vnp03 = xr.open_dataset(vnp03, group="geolocation_data")    
@@ -208,9 +202,9 @@ def process_granule(path: "pathlib.Path") -> xr.Dataset:
         "TO3",
         "WS",
         "TS",
-        "BTD14_15",
-        "BTD14_16",
-        "BTD15_16",
+        "M14_bt",
+        "M15_bt",
+        "M16_bt",
     ]    
     # concatenate the feature variables, in the order above, into a 3D array
     x = variables_merged[features].to_array("feature")
@@ -220,12 +214,16 @@ def process_granule(path: "pathlib.Path") -> xr.Dataset:
 def sensitivity_analysis(ds, network, percentage):
     x_values = ds['x'].values
     std_dev = np.std(x_values)   
-    sensitivity_values = []  
+    dust_sensitivity_values = []  
+    temp_sensitivity_values = []
 
     perturbation = 0.01 * std_dev * percentage  # pertubation is 1% of standard deviation
     # Peturb the x values
     perturbed_values = x_values + perturbation # x + dx 
-    original_outputs = network.predict(x_values)
+    original_outputs = network.predict(x_values) 
+    original_dust = original_outputs[:, 0] 
+    original_temp = original_outputs[:, 1] 
+
 
     # Loop through each variable in the inputs
     for i in range( x_values.shape[1]):
@@ -233,15 +231,28 @@ def sensitivity_analysis(ds, network, percentage):
         # Perturb the i-th variable by adding perturbation value
         x[:,i] += perturbed_values[:,i]
         # Predict with perturbed values
-        perturbed_outputs = network.predict(x)    
+        perturbed_outputs = network.predict(x)  
+        perturbed_dust = perturbed_outputs[:, 0] 
+        perturbed_temp = perturbed_outputs[:, 1]    
         # Calculate sensitivity: (change in y) / (change in x)  
-        change_y = np.abs(perturbed_outputs - original_outputs)
-        sensitivity = np.mean(change_y / (perturbation - x_values))
-        sensitivity_values.append(sensitivity) 
+        change_dust = np.mean(perturbed_dust - original_dust) 
+        change_temp = np.mean(perturbed_temp - original_temp)
+        dust_sensitivity = np.mean(change_dust / (perturbation - x_values)) 
+        temp_sensitivity = np.mean(change_temp / (perturbation - x_values))
+        dust_sensitivity_values.append(dust_sensitivity)  
+        temp_sensitivity_values.append(temp_sensitivity) 
 
-    # Plot the sensitivity matrix and histogram 
-    plt.plot(sensitivity_values)
+
+    # Plot the dust sensitivity matrix and histogram 
+    plt.plot(dust_sensitivity_values)
     plt.xlabel('Inputs (1-7)')
     plt.ylabel("Sensitivity") 
-    plt.title("Sensitivity Analysis" )
+    plt.title("Dust Sensitivity Analysis" )
+    plt.show()  
+
+    # Plot the temperature sensitivity matrix and histogram 
+    plt.plot(temp_sensitivity_values)
+    plt.xlabel('Inputs (1-7)')
+    plt.ylabel("Sensitivity") 
+    plt.title("Temperature Sensitivity Analysis" )
     plt.show() 
