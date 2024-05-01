@@ -1,6 +1,8 @@
 # hot-dust 
 Notebooks and scripts that analyze infrared data from the VIIRS satellite instrument and train a neural network to quantify the dust in the atmosphere.  
 
+# ADD TRUE COLOR IMAGE 
+ 
 ## Aerosols and the VIIRS Satelite 
 Monitoring aerosols (which includes dust, smoke, volcanic ash, sea spray, sulfate, and more) is important for climate, air quality, and hazard avoidance purposes. Being able to identify the amounts of specific types of aerosol particle in the atmosphere makes these tasks easier. However, to date, most approaches applied to satellite data are able to determine only the total columnar aerosol optical thickness (AOT, an optical measure of aerosol amount) and not robustly quantify individual components.
 
@@ -18,7 +20,9 @@ There are two addtional models that can be found in the branches labelled `2-out
 
 The `subtracted-bt` model takes the brightness temperature differences as inputs instead of the brightness temperature bands (i.e. _"M14-M15"_ and _"M15-M16"_ as opposed to _M14_, _M15_, and _M16_). Then the model predicts the _dust optical thickness_. 
 
-The changes to the models can be found in thier respective branches and `preprocess` notebooks. 
+The changes to the models can be found in thier respective branches and `preprocess` notebooks.  
+
+# ADD RESULTS
 
 ## Results  
 On the simulated data the model performed well. When applied to actual VIIRS data the network did not predict realistic dust optical thickness, suggesting that something about the simulated data was not sufficiently realistic. See the `evaluate` evaluate notebook. 
