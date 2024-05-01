@@ -16,7 +16,7 @@ In order to do this we had to perform several steps in order to prepare the data
   2. Step 2
 
 ## Results  
-On the simulated data the model performed well. When applied to actual VIIRS data the network did not predict realistic dust optical thickness, suggesting that something about the simulated data was not sufficiently realistic. See the notebook in the repsitory **evaluate**.  
+On the simulated data the model performed well. When applied to actual VIIRS data the network did not predict realistic dust optical thickness, suggesting that something about the simulated data was not sufficiently realistic. See the `evaluate` evaluate notebook.  
 
 ## Data avalibility 
 Don't know if I need this section yet...
