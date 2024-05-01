@@ -11,12 +11,17 @@ The [Visible Infrared Imaging Radiometer Suite (VIIRS)](https://www.earthdata.na
 ## Aim 
 We trained a neural network model to quantify dust in the atmosphere utilizing simulated data. The simulations were performed using the freely-available [libRadtran](https://libradtran.org/doku.php) radiative transfer code. They provide a labeled truth data set for the prediction target (i.e. AOT). After analyzing the model's performance on simulated data applied the network on actual VIIRS data from NASA's data archive [LAADS](https://ladsweb.modaps.eosdis.nasa.gov/). 
 
-In order to do this we had to perform several steps in order to prepare the data for the network. 
-  1. Step 1
-  2. Step 2
+## The Model
+In order to do this we had the network take the _sensor zenith angle_, _surface pressure_, _water vapor_, _ozone_, _surface wind speed_, _surface temperature_, and VIIRS bands _M14_, _M15_, and _M16_ as inputs. The network then predicts the base 10 logarithm of dust aerosol optical thickness (AOT) at 10 μm. Hyperparameters for model development include use of the Adam optimizer with learning rate of 3e-4, a single hidden layer with 32 nodes, a batch size of 64 samples, mean squared error (MSE) loss, and early termination after 20 epochs without improvement in the loss calculated on the validation data.
+
+The are two addtional models that can be found in the branches labelled `2-output` and `subtracted-bt`. The `2-output` model removes _surface temperature_ as an input variable and makes it an output variable. The model then predicts _dust optical thickness_ and _surface temperature_. The `subtracted-bt` model takes the brightness temperature differences as inputs instead of brightness temperature bands (i.e. _"M14-M15"_ and _"M15-M16"_ as opposed to _M14_, _M15_, and _M16_). 
+
+The changes to the models can be found in thier respective branches and `preprocess` notebooks. 
 
 ## Results  
-On the simulated data the model performed well. When applied to actual VIIRS data the network did not predict realistic dust optical thickness, suggesting that something about the simulated data was not sufficiently realistic. See the `evaluate` evaluate notebook.  
+On the simulated data the model performed well. When applied to actual VIIRS data the network did not predict realistic dust optical thickness, suggesting that something about the simulated data was not sufficiently realistic. See the `evaluate` evaluate notebook. 
+
+
 
 ## Data avalibility 
-Don't know if I need this section yet...
+The data that was utilized to the train and test the model can be found on [Zendo](https://doi.org/10.5281/zenodo.11098890). 
