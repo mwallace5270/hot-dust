@@ -189,7 +189,7 @@ def process_granule(path: "pathlib.Path") -> xr.Dataset:
     # divide the MERRA2 pressure by 100 to get it in the right units
     merra_variables['PS'] = merra_variables['PS'] / 100
     # merge viirs and merra variables
-    variables_merged = xr.merge([vnp02_variables, vnp03_variables, merra_variables, combined_btd])
+    variables_merged = xr.merge([vnp02_variables, vnp03_variables, merra_variables])
     
     # ## Transform to Model Input
     # the features list must references the same variables as the features list in `prepare_training_data`
