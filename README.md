@@ -30,4 +30,4 @@ On the simulated data the model performed well. When applied to actual VIIRS dat
 
 
 ## Data avalibility 
-The data that was utilized to the train and test the model can be found on [Zendo](https://doi.org/10.5281/zenodo.11098890). 
+The model was trained with with [simulated data](https://doi.org/10.5281/zenodo.11149300) and tested with [VIIRS data](https://doi.org/10.5281/zenodo.11098890). The sets of data used are stored on Zendo. 
