@@ -1,7 +1,7 @@
 # hot-dust 
 Notebooks and scripts that analyze infrared data from the VIIRS satellite instrument and train a neural network to quantify the dust in the atmosphere.  
 
-![image](https://github.com/mwallace5270/hot-dust/assets/131276458/09d4be0d-1b91-4ff9-82bd-ab3e05fc3525)
+![image](https://github.com/mwallace5270/hot-dust/assets/131276458/78382219-d3e2-4ed8-bee5-f9493b993b39)
 
 
 ## Aerosols and the VIIRS Satelite 
