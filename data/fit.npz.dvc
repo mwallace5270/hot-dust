@@ -1,5 +1,5 @@
 outs:
-- md5: f733f36fbcaa8bd6d61a3cbba5a75c82
-  size: 6656
+- md5: 4c1ed1a44b7b0029d16e7a2855ed14d5
+  size: 5552
   path: fit.npz
   hash: md5
